@@ -45,7 +45,6 @@ document.addEventListener('DOMContentLoaded', () => {
                 setTimeout(() => card.style.transform = 'translateX(0)', 300);
             }
         });
-        });
     }
 
     // Interactive Cybersecurity Background (Digital Rain)
