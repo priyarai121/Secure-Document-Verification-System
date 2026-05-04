@@ -1,0 +1,35 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="dashboard-header">
+    <h2>Welcome, <span class="neon-text">{{ current_user.username }}</span></h2>
+    <p>Secure Dashboard Overview</p>
+</div>
+
+<div class="dashboard-stats">
+    <div class="glass-card stat-card">
+        <div class="stat-icon">📄</div>
+        <div class="stat-value">0</div>
+        <div class="stat-label">Total Documents</div>
+    </div>
+    <div class="glass-card stat-card">
+        <div class="stat-icon" style="color: var(--neon-green);">✅</div>
+        <div class="stat-value">0</div>
+        <div class="stat-label">Verified Intact</div>
+    </div>
+    <div class="glass-card stat-card">
+        <div class="stat-icon" style="color: #ff3333;">⚠️</div>
+        <div class="stat-value">0</div>
+        <div class="stat-label">Tampered Detected</div>
+    </div>
+</div>
+
+<div class="glass-card dashboard-main">
+    <div class="dashboard-actions">
+        <h3>Quick Actions</h3>
+        <p>The document upload and verification modules will be implemented in the next phase.</p>
+        <button class="btn btn-primary" disabled style="opacity: 0.5; cursor: not-allowed;">Upload Document (Coming Soon)</button>
+        <button class="btn btn-outline" disabled style="opacity: 0.5; cursor: not-allowed;">Verify Document (Coming Soon)</button>
+    </div>
+</div>
+{% endblock %}

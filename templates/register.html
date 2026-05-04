@@ -1,0 +1,39 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="auth-container">
+    <div class="glass-card auth-card">
+        <h2>Create Account</h2>
+        <p class="auth-subtitle">Join the secure document verification network.</p>
+        
+        <form method="POST" action="{{ url_for('register') }}" class="auth-form" id="registerForm">
+            <div class="form-group">
+                <label for="username">Username</label>
+                <input type="text" id="username" name="username" required placeholder="Choose a username" class="form-control" minlength="3">
+            </div>
+            
+            <div class="form-group">
+                <label for="email">Email Address</label>
+                <input type="email" id="email" name="email" required placeholder="Enter your email" class="form-control">
+            </div>
+            
+            <div class="form-group">
+                <label for="password">Password</label>
+                <input type="password" id="password" name="password" required placeholder="Create a strong password" class="form-control" minlength="6">
+            </div>
+            
+            <div class="form-group">
+                <label for="confirm_password">Confirm Password</label>
+                <input type="password" id="confirm_password" name="confirm_password" required placeholder="Confirm your password" class="form-control">
+                <small id="passwordError" class="error-text" style="display: none;">Passwords do not match.</small>
+            </div>
+            
+            <button type="submit" class="btn btn-primary btn-block">Register Account</button>
+        </form>
+        
+        <p class="auth-footer">
+            Already have an account? <a href="{{ url_for('login') }}" class="neon-link">Login here</a>
+        </p>
+    </div>
+</div>
+{% endblock %}
