@@ -9,29 +9,68 @@
 <div class="dashboard-stats">
     <div class="glass-card stat-card">
         <div class="stat-icon">📄</div>
-        <div class="stat-value">0</div>
+        <div class="stat-value">{{ total_docs }}</div>
         <div class="stat-label">Total Documents</div>
     </div>
     <div class="glass-card stat-card">
         <div class="stat-icon" style="color: var(--neon-green);">✅</div>
-        <div class="stat-value">0</div>
+        <div class="stat-value">{{ verified_docs }}</div>
         <div class="stat-label">Verified Intact</div>
     </div>
     <div class="glass-card stat-card">
         <div class="stat-icon" style="color: #ff3333;">⚠️</div>
-        <div class="stat-value">0</div>
+        <div class="stat-value">{{ tampered_docs }}</div>
         <div class="stat-label">Tampered Detected</div>
     </div>
 </div>
 
 <div class="glass-card dashboard-main">
-    <div class="dashboard-actions">
+    <div class="dashboard-actions" style="margin-bottom: 2rem;">
         <h3>Quick Actions</h3>
-        <p>The document upload and verification modules will be implemented in the next phase.</p>
-        <button class="btn btn-primary" disabled style="opacity: 0.5; cursor: not-allowed;">Upload Document (Coming
-            Soon)</button>
+        <p>Start securing your documents today.</p>
+        <a href="{{ url_for('upload') }}" class="btn btn-primary">Upload Document</a>
         <button class="btn btn-outline" disabled style="opacity: 0.5; cursor: not-allowed;">Verify Document (Coming
             Soon)</button>
+    </div>
+
+    <div class="recent-uploads">
+        <h3>Recent Uploads</h3>
+        {% if documents %}
+        <div class="table-responsive">
+            <table class="data-table">
+                <thead>
+                    <tr>
+                        <th>Filename</th>
+                        <th>Upload Date</th>
+                        <th>Status</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for doc in documents %}
+                    <tr>
+                        <td>{{ doc.filename }}</td>
+                        <td>{{ doc.upload_date.strftime('%Y-%m-%d %H:%M') }}</td>
+                        <td>
+                            {% if doc.verification_status == 'Verified' %}
+                            <span class="status-badge success">Verified</span>
+                            {% elif doc.verification_status == 'Tampered' %}
+                            <span class="status-badge error">Tampered</span>
+                            {% else %}
+                            <span class="status-badge warning">Pending</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            <a href="{{ url_for('download_file', doc_id=doc.id) }}" class="btn btn-sm btn-outline">Download</a>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% else %}
+        <p>No documents uploaded yet. Get started by uploading your first document.</p>
+        {% endif %}
     </div>
 </div>
 {% endblock %}

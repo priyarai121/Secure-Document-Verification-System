@@ -1,0 +1,30 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="dashboard-header">
+    <h2>Secure Document Upload</h2>
+    <p>Upload your files for cryptographic verification</p>
+</div>
+
+<div class="glass-card upload-container">
+    <div id="upload-zone" class="upload-zone">
+        <div class="upload-icon">📤</div>
+        <h3>Drag & Drop Files Here</h3>
+        <p>or</p>
+        <button type="button" class="btn btn-outline" onclick="document.getElementById('file-input').click()">Browse Files</button>
+        <input type="file" id="file-input" class="hidden-input" accept=".pdf,.txt,.docx,.png,.jpg,.jpeg">
+        <p class="upload-limits">Supported formats: PDF, TXT, DOCX, PNG, JPG (Max 16MB)</p>
+    </div>
+
+    <div id="upload-progress-container" style="display: none; margin-top: 2rem;">
+        <div class="progress-info">
+            <span id="progress-filename">Uploading...</span>
+            <span id="progress-percentage">0%</span>
+        </div>
+        <div class="progress-bar">
+            <div id="progress-fill" class="progress-fill"></div>
+        </div>
+        <p id="upload-status-message" class="status-message"></p>
+    </div>
+</div>
+{% endblock %}

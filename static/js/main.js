@@ -99,4 +99,123 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         });
     }
+
+    // File Upload Logic
+    const uploadZone = document.getElementById('upload-zone');
+    const fileInput = document.getElementById('file-input');
+    
+    if (uploadZone && fileInput) {
+        const progressContainer = document.getElementById('upload-progress-container');
+        const progressFill = document.getElementById('progress-fill');
+        const progressPercentage = document.getElementById('progress-percentage');
+        const progressFilename = document.getElementById('progress-filename');
+        const statusMessage = document.getElementById('upload-status-message');
+
+        // Prevent default drag behaviors
+        ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
+            uploadZone.addEventListener(eventName, preventDefaults, false);
+            document.body.addEventListener(eventName, preventDefaults, false);
+        });
+
+        function preventDefaults(e) {
+            e.preventDefault();
+            e.stopPropagation();
+        }
+
+        // Highlight upload zone on drag
+        ['dragenter', 'dragover'].forEach(eventName => {
+            uploadZone.addEventListener(eventName, () => {
+                uploadZone.classList.add('dragover');
+            }, false);
+        });
+
+        ['dragleave', 'drop'].forEach(eventName => {
+            uploadZone.addEventListener(eventName, () => {
+                uploadZone.classList.remove('dragover');
+            }, false);
+        });
+
+        // Handle dropped files
+        uploadZone.addEventListener('drop', (e) => {
+            const dt = e.dataTransfer;
+            const files = dt.files;
+            handleFiles(files);
+        });
+
+        // Handle file input change
+        fileInput.addEventListener('change', function() {
+            handleFiles(this.files);
+        });
+
+        function handleFiles(files) {
+            if (files.length === 0) return;
+            const file = files[0]; // Only handle single file for now
+            uploadFile(file);
+        }
+
+        function uploadFile(file) {
+            // Reset UI
+            progressContainer.style.display = 'block';
+            progressFill.style.width = '0%';
+            progressPercentage.textContent = '0%';
+            progressFilename.textContent = file.name;
+            statusMessage.textContent = '';
+            statusMessage.className = 'status-message';
+            
+            // Validate file size (16MB max)
+            if (file.size > 16 * 1024 * 1024) {
+                statusMessage.textContent = 'File too large. Max size is 16MB.';
+                statusMessage.classList.add('error');
+                return;
+            }
+
+            const formData = new FormData();
+            formData.append('file', file);
+
+            const xhr = new XMLHttpRequest();
+            xhr.open('POST', '/upload', true);
+
+            // Setup progress event
+            xhr.upload.addEventListener('progress', (e) => {
+                if (e.lengthComputable) {
+                    const percentComplete = Math.round((e.loaded / e.total) * 100);
+                    progressFill.style.width = percentComplete + '%';
+                    progressPercentage.textContent = percentComplete + '%';
+                }
+            });
+
+            // Handle response
+            xhr.onload = function() {
+                if (xhr.status === 200) {
+                    const response = JSON.parse(xhr.responseText);
+                    statusMessage.textContent = 'Upload complete! Verifying...';
+                    statusMessage.classList.add('success');
+                    progressFill.style.backgroundColor = 'var(--neon-green)';
+                    
+                    // Redirect after a short delay
+                    setTimeout(() => {
+                        window.location.href = response.redirect;
+                    }, 1000);
+                } else {
+                    let errorMsg = 'Upload failed.';
+                    try {
+                        const response = JSON.parse(xhr.responseText);
+                        if (response.error) errorMsg = response.error;
+                    } catch (e) {}
+                    
+                    statusMessage.textContent = errorMsg;
+                    statusMessage.classList.add('error');
+                    progressFill.style.backgroundColor = 'var(--error-red)';
+                }
+            };
+
+            xhr.onerror = function() {
+                statusMessage.textContent = 'Network error occurred.';
+                statusMessage.classList.add('error');
+                progressFill.style.backgroundColor = 'var(--error-red)';
+            };
+
+            xhr.send(formData);
+        }
+    }
 });

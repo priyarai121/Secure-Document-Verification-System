@@ -1,15 +1,27 @@
 import os
-from flask import Flask, render_template, redirect, url_for, flash, request
+import hashlib
+from flask import Flask, render_template, redirect, url_for, flash, request, jsonify, send_from_directory
 from flask_login import LoginManager, login_user, logout_user, login_required, current_user
 from werkzeug.security import generate_password_hash, check_password_hash
+from werkzeug.utils import secure_filename
 from models import db
 from models.user import User
+from models.document import Document
 
 app = Flask(__name__)
 # Secret key for session management (in a real app, load this from .env)
 app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY', 'default-dev-secret-key-123')
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///database.db'
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
+app.config['UPLOAD_FOLDER'] = os.path.join('static', 'uploads')
+app.config['MAX_CONTENT_LENGTH'] = 16 * 1024 * 1024 # 16MB
+ALLOWED_EXTENSIONS = {'pdf', 'txt', 'docx', 'png', 'jpg', 'jpeg'}
+
+# Ensure upload folder exists
+os.makedirs(app.config['UPLOAD_FOLDER'], exist_ok=True)
+
+def allowed_file(filename):
+    return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
 
 # Initialize DB
 db.init_app(app)
@@ -106,7 +118,81 @@ def logout():
 @app.route('/dashboard')
 @login_required
 def dashboard():
-    return render_template('dashboard.html')
+    documents = Document.query.filter_by(user_id=current_user.id).order_by(Document.upload_date.desc()).all()
+    total_docs = len(documents)
+    verified_docs = sum(1 for d in documents if d.verification_status == 'Verified')
+    tampered_docs = sum(1 for d in documents if d.verification_status == 'Tampered')
+    
+    return render_template('dashboard.html', 
+                           documents=documents, 
+                           total_docs=total_docs,
+                           verified_docs=verified_docs,
+                           tampered_docs=tampered_docs)
+
+@app.route('/upload', methods=['GET', 'POST'])
+@login_required
+def upload():
+    if request.method == 'POST':
+        if 'file' not in request.files:
+            return jsonify({'error': 'No file part'}), 400
+        
+        file = request.files['file']
+        if file.filename == '':
+            return jsonify({'error': 'No selected file'}), 400
+            
+        if file and allowed_file(file.filename):
+            filename = secure_filename(file.filename)
+            
+            # Calculate SHA-256 hash
+            sha256_hash = hashlib.sha256()
+            # Read in chunks to avoid memory issues with large files
+            for chunk in iter(lambda: file.read(4096), b""):
+                sha256_hash.update(chunk)
+            
+            file_hash = sha256_hash.hexdigest()
+            file.seek(0) # Reset file pointer to beginning after reading for hash
+            
+            # Check for duplicates for this user
+            existing_doc = Document.query.filter_by(user_id=current_user.id, file_hash=file_hash).first()
+            if existing_doc:
+                return jsonify({'error': 'File already uploaded.'}), 400
+            
+            # Save file
+            file_path = os.path.join(app.config['UPLOAD_FOLDER'], filename)
+            # Handle naming collision if a different file has the same name
+            base, ext = os.path.splitext(filename)
+            counter = 1
+            while os.path.exists(file_path):
+                filename = f"{base}_{counter}{ext}"
+                file_path = os.path.join(app.config['UPLOAD_FOLDER'], filename)
+                counter += 1
+                
+            file.save(file_path)
+            
+            # Create DB record
+            new_doc = Document(
+                user_id=current_user.id,
+                filename=filename,
+                file_hash=file_hash,
+                verification_status='Pending'
+            )
+            db.session.add(new_doc)
+            db.session.commit()
+            
+            return jsonify({'success': 'File uploaded successfully', 'redirect': url_for('dashboard')}), 200
+            
+        return jsonify({'error': 'File type not allowed'}), 400
+        
+    return render_template('upload.html')
+
+@app.route('/download/<int:doc_id>')
+@login_required
+def download_file(doc_id):
+    doc = Document.query.get_or_404(doc_id)
+    if doc.user_id != current_user.id:
+        flash('Unauthorized access', 'error')
+        return redirect(url_for('dashboard'))
+    return send_from_directory(app.config['UPLOAD_FOLDER'], doc.filename)
 
 if __name__ == '__main__':
     app.run(debug=True)

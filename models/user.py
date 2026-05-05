@@ -9,5 +9,8 @@ class User(db.Model, UserMixin):
     password_hash = db.Column(db.String(256), nullable=False)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     
+    # Relationships
+    documents = db.relationship('Document', backref='owner', lazy=True)
+    
     def __repr__(self):
         return f'<User {self.username}>'
