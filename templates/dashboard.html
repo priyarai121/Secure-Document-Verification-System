@@ -60,7 +60,8 @@
                             <span class="status-badge warning">Pending</span>
                             {% endif %}
                         </td>
-                        <td>
+                        <td style="display: flex; gap: 0.5rem; justify-content: center;">
+                            <a href="{{ url_for('document_detail', doc_id=doc.id) }}" class="btn btn-sm btn-primary">View</a>
                             <a href="{{ url_for('download_file', doc_id=doc.id) }}" class="btn btn-sm btn-outline">Download</a>
                         </td>
                     </tr>

@@ -7,6 +7,8 @@ from werkzeug.utils import secure_filename
 from models import db
 from models.user import User
 from models.document import Document
+from utils.encryption import encrypt_hash
+from utils.encoding import encode_base64
 
 app = Flask(__name__)
 # Secret key for session management (in a real app, load this from .env)
@@ -152,6 +154,10 @@ def upload():
             file_hash = sha256_hash.hexdigest()
             file.seek(0) # Reset file pointer to beginning after reading for hash
             
+            # Encrypt the hash and encode to base64
+            encrypted_bytes = encrypt_hash(file_hash)
+            base64_encoded_data = encode_base64(encrypted_bytes)
+            
             # Check for duplicates for this user
             existing_doc = Document.query.filter_by(user_id=current_user.id, file_hash=file_hash).first()
             if existing_doc:
@@ -174,6 +180,8 @@ def upload():
                 user_id=current_user.id,
                 filename=filename,
                 file_hash=file_hash,
+                encrypted_hash=encrypted_bytes.hex(),
+                base64_data=base64_encoded_data,
                 verification_status='Pending'
             )
             db.session.add(new_doc)
@@ -193,6 +201,15 @@ def download_file(doc_id):
         flash('Unauthorized access', 'error')
         return redirect(url_for('dashboard'))
     return send_from_directory(app.config['UPLOAD_FOLDER'], doc.filename)
+
+@app.route('/document/<int:doc_id>')
+@login_required
+def document_detail(doc_id):
+    doc = Document.query.get_or_404(doc_id)
+    if doc.user_id != current_user.id:
+        flash('Unauthorized access', 'error')
+        return redirect(url_for('dashboard'))
+    return render_template('document_detail.html', doc=doc)
 
 if __name__ == '__main__':
     app.run(debug=True)

@@ -1,0 +1,53 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="dashboard-header">
+    <h2>Document Details: <span class="neon-text">{{ doc.filename }}</span></h2>
+    <p>View the cryptographic security properties of this file.</p>
+</div>
+
+<div class="glass-card dashboard-main">
+    <div style="margin-bottom: 2rem;">
+        <a href="{{ url_for('dashboard') }}" class="btn btn-outline">&larr; Back to Dashboard</a>
+        <a href="{{ url_for('download_file', doc_id=doc.id) }}" class="btn btn-primary" style="margin-left: 1rem;">Download File</a>
+    </div>
+
+    <div class="detail-group" style="margin-bottom: 1.5rem;">
+        <h4 style="color: var(--neon-blue); margin-bottom: 0.5rem;">Original Filename</h4>
+        <div class="code-block" style="background: rgba(0, 0, 0, 0.3); padding: 1rem; border-radius: 8px; border: 1px solid rgba(0, 255, 204, 0.2);">
+            {{ doc.filename }}
+        </div>
+    </div>
+    
+    <div class="detail-group" style="margin-bottom: 1.5rem;">
+        <h4 style="color: var(--neon-blue); margin-bottom: 0.5rem;">Upload Date</h4>
+        <div class="code-block" style="background: rgba(0, 0, 0, 0.3); padding: 1rem; border-radius: 8px; border: 1px solid rgba(0, 255, 204, 0.2);">
+            {{ doc.upload_date.strftime('%Y-%m-%d %H:%M:%S') }} UTC
+        </div>
+    </div>
+
+    <div class="detail-group" style="margin-bottom: 1.5rem;">
+        <h4 style="color: var(--neon-green); margin-bottom: 0.5rem;">SHA-256 Hash</h4>
+        <p style="font-size: 0.9rem; margin-bottom: 0.5rem; color: #aaa;">The mathematical fingerprint of the uploaded document.</p>
+        <div class="code-block" style="background: rgba(0, 0, 0, 0.3); padding: 1rem; border-radius: 8px; border: 1px solid rgba(0, 255, 204, 0.2); font-family: monospace; word-break: break-all; color: #fff;">
+            {{ doc.file_hash }}
+        </div>
+    </div>
+
+    <div class="detail-group" style="margin-bottom: 1.5rem;">
+        <h4 style="color: #ff33ff; margin-bottom: 0.5rem;">RSA Encrypted Hash (Hex)</h4>
+        <p style="font-size: 0.9rem; margin-bottom: 0.5rem; color: #aaa;">The SHA-256 hash encrypted using RSA algorithm with PKCS1_OAEP padding.</p>
+        <div class="code-block" style="background: rgba(0, 0, 0, 0.3); padding: 1rem; border-radius: 8px; border: 1px solid rgba(255, 51, 255, 0.2); font-family: monospace; word-break: break-all; max-height: 150px; overflow-y: auto; color: #fff;">
+            {{ doc.encrypted_hash }}
+        </div>
+    </div>
+
+    <div class="detail-group" style="margin-bottom: 1.5rem;">
+        <h4 style="color: #ffcc00; margin-bottom: 0.5rem;">Base64 Encoded Value</h4>
+        <p style="font-size: 0.9rem; margin-bottom: 0.5rem; color: #aaa;">The RSA encrypted hash encoded into Base64 format for secure storage and transfer.</p>
+        <div class="code-block" style="background: rgba(0, 0, 0, 0.3); padding: 1rem; border-radius: 8px; border: 1px solid rgba(255, 204, 0, 0.2); font-family: monospace; word-break: break-all; max-height: 150px; overflow-y: auto; color: #fff;">
+            {{ doc.base64_data }}
+        </div>
+    </div>
+</div>
+{% endblock %}

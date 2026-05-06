@@ -1,0 +1,17 @@
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Environment
+venv/
+.env
+
+# Database and Keys
+instance/
+*.sqlite3
+*.db
+
+# Uploads
+static/uploads/
+test_doc.txt
