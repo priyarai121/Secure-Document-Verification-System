@@ -9,6 +9,8 @@ from models.user import User
 from models.document import Document
 from utils.encryption import encrypt_hash
 from utils.encoding import encode_base64
+from utils.verification import verify_document_hash
+from datetime import datetime
 
 app = Flask(__name__)
 # Secret key for session management (in a real app, load this from .env)
@@ -125,11 +127,24 @@ def dashboard():
     verified_docs = sum(1 for d in documents if d.verification_status == 'Verified')
     tampered_docs = sum(1 for d in documents if d.verification_status == 'Tampered')
     
+    # Calculate upload trends (last 7 days)
+    trends = {}
+    for doc in documents:
+        date_str = doc.upload_date.strftime('%Y-%m-%d')
+        trends[date_str] = trends.get(date_str, 0) + 1
+        
+    # Sort trends by date
+    sorted_trends = dict(sorted(trends.items())[-7:]) # Get up to 7 most recent days
+    trend_labels = list(sorted_trends.keys())
+    trend_data = list(sorted_trends.values())
+    
     return render_template('dashboard.html', 
                            documents=documents, 
                            total_docs=total_docs,
                            verified_docs=verified_docs,
-                           tampered_docs=tampered_docs)
+                           tampered_docs=tampered_docs,
+                           trend_labels=trend_labels,
+                           trend_data=trend_data)
 
 @app.route('/upload', methods=['GET', 'POST'])
 @login_required
@@ -210,6 +225,63 @@ def document_detail(doc_id):
         flash('Unauthorized access', 'error')
         return redirect(url_for('dashboard'))
     return render_template('document_detail.html', doc=doc)
+
+@app.route('/verify', methods=['GET', 'POST'])
+@login_required
+def verify():
+    # Get all documents uploaded by the user to populate the dropdown
+    user_documents = Document.query.filter_by(user_id=current_user.id).order_by(Document.upload_date.desc()).all()
+    
+    if request.method == 'POST':
+        doc_id = request.form.get('document_id')
+        if not doc_id:
+            return jsonify({'error': 'Please select a document.'}), 400
+            
+        doc = Document.query.get(doc_id)
+        if not doc or doc.user_id != current_user.id:
+            return jsonify({'error': 'Invalid document selected.'}), 400
+            
+        if 'file' not in request.files:
+            return jsonify({'error': 'No file part.'}), 400
+            
+        file = request.files['file']
+        if file.filename == '':
+            return jsonify({'error': 'No selected file.'}), 400
+            
+        if file:
+            is_verified = verify_document_hash(file, doc.file_hash)
+            doc.verification_status = 'Verified' if is_verified else 'Tampered'
+            doc.verification_date = datetime.utcnow()
+            db.session.commit()
+            
+            return jsonify({
+                'success': True,
+                'status': doc.verification_status,
+                'message': 'Document Verified Successfully' if is_verified else 'Document Tampered / Modified'
+            }), 200
+            
+    return render_template('verify.html', documents=user_documents)
+
+@app.route('/history')
+@login_required
+def history():
+    status_filter = request.args.get('status')
+    search_query = request.args.get('search')
+    
+    query = Document.query.filter(
+        Document.user_id == current_user.id,
+        Document.verification_status.in_(['Verified', 'Tampered'])
+    )
+    
+    if status_filter and status_filter in ['Verified', 'Tampered']:
+        query = query.filter(Document.verification_status == status_filter)
+        
+    if search_query:
+        query = query.filter(Document.filename.ilike(f'%{search_query}%'))
+        
+    verified_docs = query.order_by(Document.verification_date.desc()).all()
+    
+    return render_template('history.html', documents=verified_docs)
 
 if __name__ == '__main__':
     app.run(debug=True)

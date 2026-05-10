@@ -1,0 +1,98 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="auth-container" style="max-width: 600px;">
+    <div class="glass-card">
+        <h2 style="text-align: center; margin-bottom: 2rem;">Verify <span class="neon-text">Document</span></h2>
+        
+        <form id="verifyForm" enctype="multipart/form-data">
+            <div class="form-group">
+                <label for="document_id">Select Document</label>
+                <select id="document_id" name="document_id" required class="form-control" style="width: 100%; padding: 0.8rem; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); color: #fff; border-radius: 8px; margin-bottom: 1.5rem;">
+                    <option value="" disabled selected>-- Select a document to verify against --</option>
+                    {% for doc in documents %}
+                        <option value="{{ doc.id }}">{{ doc.filename }} (Uploaded: {{ doc.upload_date.strftime('%Y-%m-%d') }})</option>
+                    {% endfor %}
+                </select>
+            </div>
+            
+            <div class="form-group">
+                <label for="file">Upload File to Check</label>
+                <div class="file-upload-wrapper">
+                    <input type="file" id="file" name="file" required class="file-input" style="width: 100%; padding: 0.8rem; background: rgba(255,255,255,0.05); border: 1px dashed rgba(255,255,255,0.3); color: #fff; border-radius: 8px;">
+                </div>
+            </div>
+            
+            <button type="submit" class="btn btn-primary" style="width: 100%; margin-top: 1rem;" id="verifyBtn">Verify Now</button>
+        </form>
+        
+        <div id="resultContainer" style="margin-top: 2rem; display: none; padding: 1.5rem; border-radius: 8px; text-align: center;">
+            <h3 id="resultTitle" style="margin-bottom: 0.5rem;"></h3>
+            <p id="resultMessage"></p>
+        </div>
+        
+        <div style="text-align: center; margin-top: 1.5rem;">
+            <a href="{{ url_for('history') }}" class="neon-text" style="text-decoration: none;">View Verification History</a>
+        </div>
+    </div>
+</div>
+
+<script>
+document.getElementById('verifyForm').addEventListener('submit', async function(e) {
+    e.preventDefault();
+    
+    const form = e.target;
+    const formData = new FormData(form);
+    const btn = document.getElementById('verifyBtn');
+    const resultContainer = document.getElementById('resultContainer');
+    const resultTitle = document.getElementById('resultTitle');
+    const resultMessage = document.getElementById('resultMessage');
+    
+    btn.textContent = 'Verifying...';
+    btn.disabled = true;
+    resultContainer.style.display = 'none';
+    
+    try {
+        const response = await fetch('{{ url_for("verify") }}', {
+            method: 'POST',
+            body: formData
+        });
+        
+        const data = await response.json();
+        
+        resultContainer.style.display = 'block';
+        
+        if (response.ok && data.success) {
+            resultTitle.textContent = data.status;
+            resultMessage.textContent = data.message;
+            
+            if (data.status === 'Verified') {
+                resultContainer.style.backgroundColor = 'rgba(0, 255, 136, 0.1)';
+                resultContainer.style.border = '1px solid #00ff88';
+                resultTitle.style.color = '#00ff88';
+            } else {
+                resultContainer.style.backgroundColor = 'rgba(255, 51, 51, 0.1)';
+                resultContainer.style.border = '1px solid #ff3333';
+                resultTitle.style.color = '#ff3333';
+            }
+        } else {
+            resultContainer.style.backgroundColor = 'rgba(255, 153, 51, 0.1)';
+            resultContainer.style.border = '1px solid #ff9933';
+            resultTitle.textContent = 'Error';
+            resultTitle.style.color = '#ff9933';
+            resultMessage.textContent = data.error || 'An unexpected error occurred.';
+        }
+    } catch (error) {
+        resultContainer.style.display = 'block';
+        resultContainer.style.backgroundColor = 'rgba(255, 153, 51, 0.1)';
+        resultContainer.style.border = '1px solid #ff9933';
+        resultTitle.textContent = 'Error';
+        resultTitle.style.color = '#ff9933';
+        resultMessage.textContent = 'Could not reach the server. Please try again.';
+    } finally {
+        btn.textContent = 'Verify Now';
+        btn.disabled = false;
+    }
+});
+</script>
+{% endblock %}

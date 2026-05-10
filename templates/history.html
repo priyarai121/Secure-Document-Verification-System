@@ -1,0 +1,86 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="dashboard-header" style="margin-bottom: 2rem;">
+    <h2>Verification <span class="neon-text">History</span></h2>
+    <p>Track your document verifications and tamper detection results.</p>
+</div>
+
+<div class="glass-card" style="margin-bottom: 2rem; padding: 1.5rem;">
+    <form method="GET" action="{{ url_for('history') }}" style="display: flex; gap: 1rem; align-items: flex-end; flex-wrap: wrap;">
+        <div style="flex: 1; min-width: 200px;">
+            <label for="search" style="display: block; margin-bottom: 0.5rem; color: #aaa;">Search Filename</label>
+            <input type="text" id="search" name="search" value="{{ request.args.get('search', '') }}" placeholder="e.g. report.pdf" class="form-control" style="width: 100%; padding: 0.8rem; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); color: #fff; border-radius: 8px;">
+        </div>
+        
+        <div style="flex: 1; min-width: 150px;">
+            <label for="status" style="display: block; margin-bottom: 0.5rem; color: #aaa;">Filter by Status</label>
+            <select id="status" name="status" class="form-control" style="width: 100%; padding: 0.8rem; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); color: #fff; border-radius: 8px;">
+                <option value="">All Statuses</option>
+                <option value="Verified" {% if request.args.get('status') == 'Verified' %}selected{% endif %}>Verified</option>
+                <option value="Tampered" {% if request.args.get('status') == 'Tampered' %}selected{% endif %}>Tampered</option>
+            </select>
+        </div>
+        
+        <div style="min-width: 100px;">
+            <button type="submit" class="btn btn-primary" style="padding: 0.8rem 1.5rem; height: 46px;">Filter</button>
+        </div>
+        
+        {% if request.args.get('search') or request.args.get('status') %}
+        <div style="min-width: 100px;">
+            <a href="{{ url_for('history') }}" class="btn btn-outline" style="padding: 0.8rem 1.5rem; height: 46px; display: inline-block; line-height: 1.5;">Clear</a>
+        </div>
+        {% endif %}
+    </form>
+</div>
+
+<div class="glass-card">
+    <div class="table-responsive">
+        {% if documents %}
+        <table class="data-table" style="width: 100%; border-collapse: collapse;">
+            <thead>
+                <tr style="border-bottom: 1px solid rgba(255,255,255,0.1);">
+                    <th style="padding: 1rem; text-align: left;">Filename</th>
+                    <th style="padding: 1rem; text-align: left;">Original Upload</th>
+                    <th style="padding: 1rem; text-align: left;">Last Verified</th>
+                    <th style="padding: 1rem; text-align: left;">Status</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for doc in documents %}
+                <tr style="border-bottom: 1px solid rgba(255,255,255,0.05);">
+                    <td style="padding: 1rem;">
+                        <a href="{{ url_for('document_detail', doc_id=doc.id) }}" style="color: #fff; text-decoration: none;">
+                            {{ doc.filename }}
+                        </a>
+                    </td>
+                    <td style="padding: 1rem; color: #aaa;">{{ doc.upload_date.strftime('%Y-%m-%d %H:%M') }}</td>
+                    <td style="padding: 1rem; color: #aaa;">
+                        {% if doc.verification_date %}
+                            {{ doc.verification_date.strftime('%Y-%m-%d %H:%M') }}
+                        {% else %}
+                            N/A
+                        {% endif %}
+                    </td>
+                    <td style="padding: 1rem;">
+                        {% if doc.verification_status == 'Verified' %}
+                        <span class="status-badge success" style="background: rgba(0, 255, 136, 0.2); color: #00ff88; padding: 0.4rem 0.8rem; border-radius: 20px; font-size: 0.85rem;">Verified</span>
+                        {% elif doc.verification_status == 'Tampered' %}
+                        <span class="status-badge error" style="background: rgba(255, 51, 51, 0.2); color: #ff3333; padding: 0.4rem 0.8rem; border-radius: 20px; font-size: 0.85rem;">Tampered</span>
+                        {% else %}
+                        <span class="status-badge warning" style="background: rgba(255, 153, 51, 0.2); color: #ff9933; padding: 0.4rem 0.8rem; border-radius: 20px; font-size: 0.85rem;">Pending</span>
+                        {% endif %}
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+        {% else %}
+        <div style="text-align: center; padding: 3rem 1rem; color: #aaa;">
+            <p>No verification history found.</p>
+            <a href="{{ url_for('verify') }}" class="btn btn-outline" style="margin-top: 1rem; display: inline-block;">Verify a Document</a>
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

@@ -10,6 +10,7 @@ class Document(db.Model):
     base64_data = db.Column(db.Text, nullable=True)
     upload_date = db.Column(db.DateTime, default=datetime.utcnow)
     verification_status = db.Column(db.String(50), default='Pending')
+    verification_date = db.Column(db.DateTime, nullable=True)
 
     def __repr__(self):
         return f'<Document {self.filename}>'
