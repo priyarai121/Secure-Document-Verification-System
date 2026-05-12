@@ -731,3 +731,48 @@ body {
     }
 }
 
+
+/* --- Additions for Stage 1 --- */
+/* Page Loader */
+.page-loader {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    background-color: var(--bg-dark);
+    z-index: 9999;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    transition: opacity 0.5s ease;
+}
+
+.loader-spinner {
+    width: 50px;
+    height: 50px;
+    border: 5px solid rgba(0, 255, 136, 0.1);
+    border-top-color: var(--neon-green);
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+    box-shadow: 0 0 15px var(--neon-green-glow);
+}
+
+@keyframes spin {
+    to { transform: rotate(360deg); }
+}
+
+/* Flash Messages Enhancement */
+.flash-icon {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.flash-content {
+    flex: 1;
+}
+
+.flash-warning {
+    border-left-color: #ffc107;
+}
