@@ -76,8 +76,7 @@ Secure Document Verification System/
     └── 500.html
 ```
 
-## Screenshots
-*(Add screenshots of the Dashboard, Verification Page, and Tamper Detection alerts here)*
+
 
 ## Security Concepts Used
 - **SHA-256 Hashing:** Used to create a unique digital fingerprint of each document.
