@@ -1,0 +1,13 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="hero-section" style="padding-top: 10vh;">
+    <h1 class="hero-title neon-text" style="font-size: 6rem; text-shadow: 0 0 20px var(--neon-green-glow);">404</h1>
+    <h2 style="font-size: 2rem; margin-bottom: 1rem;">Page Not Found</h2>
+    <p class="hero-subtitle">The requested resource could not be located in the secure database. It may have been moved, deleted, or you might have mistyped the URL.</p>
+    <div class="hero-actions">
+        <a href="{{ url_for('index') }}" class="btn btn-primary btn-lg">Return to Base</a>
+        <a href="javascript:history.back()" class="btn btn-outline btn-lg">Go Back</a>
+    </div>
+</div>
+{% endblock %}

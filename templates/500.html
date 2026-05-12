@@ -1,0 +1,13 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="hero-section" style="padding-top: 10vh;">
+    <h1 class="hero-title" style="font-size: 6rem; color: var(--error-red); text-shadow: 0 0 20px rgba(255, 51, 51, 0.5);">500</h1>
+    <h2 style="font-size: 2rem; margin-bottom: 1rem;">Internal Server Error</h2>
+    <p class="hero-subtitle">The cryptographic engine encountered an unexpected exception. Our systems are currently analyzing the incident.</p>
+    <div class="hero-actions">
+        <a href="{{ url_for('index') }}" class="btn btn-primary btn-lg">Return to Base</a>
+        <a href="javascript:location.reload()" class="btn btn-outline btn-lg">Retry Operation</a>
+    </div>
+</div>
+{% endblock %}
